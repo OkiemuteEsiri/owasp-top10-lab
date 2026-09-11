@@ -1,0 +1,78 @@
+{
+  "application": "Northstar Training Portal",
+  "environment": "lab",
+  "authorized": true,
+  "findings": [
+    {
+      "finding_id": "WEB-001",
+      "title": "Authorization check missing on administrative export",
+      "category": "A01:2021-Broken Access Control",
+      "severity": "high",
+      "affected_component": "GET /api/admin/export",
+      "evidence": "Synthetic role matrix shows a standard lab user receiving HTTP 200 for an administrator-only export request.",
+      "remediation": "Enforce server-side authorization using centrally managed policy checks for every privileged object and action.",
+      "validation": "Repeat the synthetic role-matrix tests and confirm non-admin roles receive 403 while approved administrator access remains functional.",
+      "internet_exposed": true,
+      "authentication_required": true,
+      "sensitive_data": true,
+      "mitre_attack": ["T1078 Valid Accounts"]
+    },
+    {
+      "finding_id": "WEB-002",
+      "title": "Parameterized query control absent in legacy search path",
+      "category": "A03:2021-Injection",
+      "severity": "high",
+      "affected_component": "POST /api/search",
+      "evidence": "Static review of a deliberately insecure training fixture shows user input concatenated into a SQL statement rather than bound as a parameter.",
+      "remediation": "Replace string-built queries with parameterized statements and constrain database permissions to application-required operations.",
+      "validation": "Run unit and integration tests with benign metacharacter inputs and verify the database driver uses bound parameters without changing query structure.",
+      "internet_exposed": true,
+      "authentication_required": false,
+      "sensitive_data": true,
+      "mitre_attack": ["T1190 Exploit Public-Facing Application"]
+    },
+    {
+      "finding_id": "WEB-003",
+      "title": "Security events lack actor and request correlation fields",
+      "category": "A09:2021-Security Logging and Monitoring Failures",
+      "severity": "medium",
+      "affected_component": "Authentication and authorization audit stream",
+      "evidence": "Synthetic audit records omit actor_id and request_id, preventing deterministic correlation across denied and successful events.",
+      "remediation": "Emit structured security events containing actor, request correlation, action, resource, outcome, source context, and UTC timestamp.",
+      "validation": "Generate authorized lab events and confirm required fields are present, queryable, time-normalized, and retained by the test collector.",
+      "internet_exposed": false,
+      "authentication_required": true,
+      "sensitive_data": false,
+      "mitre_attack": ["T1070 Indicator Removal"]
+    },
+    {
+      "finding_id": "WEB-004",
+      "title": "Outbound fetch policy permits unapproved destination classes",
+      "category": "A10:2021-Server-Side Request Forgery",
+      "severity": "high",
+      "affected_component": "POST /api/preview",
+      "evidence": "Synthetic policy evaluation accepts a reserved-address destination that is outside the approved lab destination allowlist.",
+      "remediation": "Use canonical destination allowlists, reject private/reserved address classes unless explicitly required, and enforce egress controls independently of application validation.",
+      "validation": "Exercise the offline destination-policy test matrix and verify disallowed address classes fail closed while approved fixtures continue to resolve.",
+      "internet_exposed": true,
+      "authentication_required": true,
+      "sensitive_data": false,
+      "mitre_attack": ["T1190 Exploit Public-Facing Application"]
+    },
+    {
+      "finding_id": "WEB-005",
+      "title": "Session cookie hardening validated after remediation",
+      "category": "A07:2021-Identification and Authentication Failures",
+      "severity": "medium",
+      "affected_component": "Session issuance middleware",
+      "evidence": "Synthetic retest confirms Secure, HttpOnly, and SameSite controls are set and session rotation occurs after authentication.",
+      "remediation": "Retain secure cookie defaults and regression tests in the authentication middleware pipeline.",
+      "validation": "Continue automated regression checks for cookie attributes and session rotation on every authentication-related change.",
+      "status": "remediated",
+      "internet_exposed": true,
+      "authentication_required": true,
+      "sensitive_data": false,
+      "mitre_attack": ["T1539 Steal Web Session Cookie"]
+    }
+  ]
+}
